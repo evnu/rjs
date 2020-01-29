@@ -376,8 +376,7 @@ fn decode<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
         return Err(BadArg);
     }
 
-    let data: Binary = args[0].decode()?;
-    let s = std::str::from_utf8(&data).map_err(|_e| BadArg)?;
+    let s: &str = args[0].decode()?;
 
     let opt: Vec<Term> = args[1].decode()?;
     let opt = parse_decode_opts(&opt)?;
