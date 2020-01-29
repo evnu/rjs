@@ -18,12 +18,6 @@ mod atoms {
         atom f = "false";
         atom null;
         atom undefined;
-
-        atom labels;
-        atom binary;
-        atom atom;
-        atom attempt_atom;
-        atom existing_atom;
     }
 }
 
