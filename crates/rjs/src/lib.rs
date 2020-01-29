@@ -103,16 +103,9 @@ impl<'a> Serialize for MyTerm<'a> {
             }
 
             List => {
-                let mut tail = term;
-
                 let mut seq = serializer.serialize_seq(None)?;
-                while !tail.is_empty_list() {
-                    let (head, next_tail) = tail.list_get_cell().map_err(badarg)?;
-
-                    let elem = MyTerm::from(head);
-                    seq.serialize_element(&elem)?;
-
-                    tail = next_tail;
+                for elem in term.into_list_iterator().map_err(badarg)? {
+                    seq.serialize_element(&MyTerm::from(elem))?;
                 }
                 seq.end()
             }
