@@ -27,7 +27,7 @@ mod atoms {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(NifUnitEnum, Clone, Copy)]
 enum LabelOpt {
     Binary,
     Atom,
@@ -362,25 +362,15 @@ fn encode<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     Ok((atoms::ok(), bin.to_term(env)).encode(env))
 }
 
-fn parse_decode_opts<'a>(env: Env<'a>, mut t: Term<'a>) -> NifResult<DecodeOpt> {
+fn parse_decode_opts<'a>(terms: &[Term<'a>]) -> NifResult<DecodeOpt> {
     let mut opt = DecodeOpt {
         label: LabelOpt::Binary,
     };
-    while !t.is_empty_list() {
-        let (head, next_tail) = t.list_get_cell()?;
-        t = next_tail;
 
-        if head == atoms::binary().to_term(env) {
-            opt.label = LabelOpt::Binary;
-        }
-        if head == atoms::atom().to_term(env) {
-            opt.label = LabelOpt::Atom;
-        }
-        if head == atoms::existing_atom().to_term(env) {
-            opt.label = LabelOpt::ExistingAtom;
-        }
-        if head == atoms::attempt_atom().to_term(env) {
-            opt.label = LabelOpt::AttemptAtom;
+    for element in terms {
+        match element.decode() {
+            Ok(label_opt) => opt.label = label_opt,
+            _ => ()
         }
     }
 
@@ -392,10 +382,11 @@ fn decode<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
         return Err(BadArg);
     }
 
-    let data = Binary::from_term(args[0])?;
+    let data: Binary = args[0].decode()?;
     let s = std::str::from_utf8(&data).map_err(|_e| BadArg)?;
 
-    let opt = parse_decode_opts(env, args[1])?;
+    let opt: Vec<Term> = args[1].decode()?;
+    let opt = parse_decode_opts(&opt)?;
 
     let read = serde_json::de::StrRead::new(s);
     let mut deser = serde_json::de::Deserializer::new(read);
